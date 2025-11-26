@@ -11,8 +11,10 @@ import json
 import logging
 import tarfile
 import requests
+import subprocess
+import glob
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, Tuple
 import pytz
 
 # Discord webhook file size limit (10MB)
@@ -103,6 +105,25 @@ def get_readable_timestamp(timezone: str = "UTC") -> str:
     
     now = datetime.now(tz)
     return now.strftime("%Y-%m-%d %H:%M:%S %Z")
+
+
+def get_iso_timestamp(timezone: str = "UTC") -> str:
+    """
+    Get current timestamp in ISO 8601 format for Discord embeds.
+    
+    Args:
+        timezone: Timezone string
+        
+    Returns:
+        ISO 8601 formatted timestamp string
+    """
+    try:
+        tz = pytz.timezone(timezone)
+    except pytz.exceptions.UnknownTimeZoneError:
+        tz = pytz.UTC
+    
+    now = datetime.now(tz)
+    return now.isoformat()
 
 
 def ensure_directory_exists(directory: str) -> bool:
@@ -300,4 +321,157 @@ def cleanup_file(file_path: str) -> None:
             logging.info(f"Cleaned up temporary file: {file_path}")
     except Exception as e:
         logging.warning(f"Failed to cleanup file {file_path}: {str(e)}")
+
+
+def format_size(bytes_size: int) -> str:
+    """
+    Format bytes into human-readable size.
+    
+    Args:
+        bytes_size: Size in bytes
+        
+    Returns:
+        Formatted string (e.g., "1.5 GB", "523.4 MB")
+    """
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if bytes_size < 1024.0:
+            return f"{bytes_size:.2f} {unit}"
+        bytes_size /= 1024.0
+    return f"{bytes_size:.2f} PB"
+
+
+def get_file_size_mb(file_path: str) -> float:
+    """
+    Get file size in megabytes.
+    
+    Args:
+        file_path: Path to the file
+        
+    Returns:
+        File size in MB, or 0 if file doesn't exist
+    """
+    try:
+        if os.path.exists(file_path):
+            size_bytes = os.path.getsize(file_path)
+            return size_bytes / (1024 * 1024)
+        return 0.0
+    except Exception as e:
+        logging.error(f"Failed to get file size for {file_path}: {str(e)}")
+        return 0.0
+
+
+def get_database_size(db_username: str, db_password: str, database: str, 
+                     db_host: str = "localhost", db_port: int = 3306) -> Tuple[float, str]:
+    """
+    Get the size of a MySQL/MariaDB database.
+    
+    Args:
+        db_username: Database username
+        db_password: Database password
+        database: Database name
+        db_host: Database host
+        db_port: Database port
+        
+    Returns:
+        Tuple of (size_in_mb, formatted_size_string)
+    """
+    try:
+        query = f"""
+        SELECT 
+            ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size_mb
+        FROM information_schema.tables
+        WHERE table_schema = '{database}';
+        """
+        
+        cmd = [
+            'mysql',
+            '-h', db_host,
+            '-P', str(db_port),
+            '-u', db_username,
+            f'-p{db_password}',
+            '-N',  # No column names
+            '-e', query
+        ]
+        
+        result = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True
+        )
+        
+        size_mb = float(result.stdout.strip() or 0)
+        formatted_size = format_size(int(size_mb * 1024 * 1024))
+        
+        return size_mb, formatted_size
+        
+    except Exception as e:
+        logging.warning(f"Failed to get database size for {database}: {str(e)}")
+        return 0.0, "Unknown"
+
+
+def cleanup_old_backups(backup_directory: str, database: str, max_files: int) -> int:
+    """
+    Clean up old backup files, keeping only the most recent max_files.
+    
+    Args:
+        backup_directory: Directory containing backup files
+        database: Database name to filter backups
+        max_files: Maximum number of backup files to keep
+        
+    Returns:
+        Number of files deleted
+    """
+    try:
+        if max_files <= 0:
+            return 0
+        
+        # Find all backup files for this database
+        pattern = os.path.join(backup_directory, f"{database}-*.sql.tar.gz")
+        backup_files = glob.glob(pattern)
+        
+        if len(backup_files) <= max_files:
+            return 0
+        
+        # Sort by modification time (oldest first)
+        backup_files.sort(key=os.path.getmtime)
+        
+        # Calculate how many files to delete
+        files_to_delete = len(backup_files) - max_files
+        
+        deleted_count = 0
+        for file_path in backup_files[:files_to_delete]:
+            try:
+                os.remove(file_path)
+                logging.info(f"Deleted old backup: {os.path.basename(file_path)}")
+                deleted_count += 1
+            except Exception as e:
+                logging.error(f"Failed to delete {file_path}: {str(e)}")
+        
+        return deleted_count
+        
+    except Exception as e:
+        logging.error(f"Error during cleanup: {str(e)}")
+        return 0
+
+
+def get_backup_count(backup_directory: str, database: str) -> int:
+    """
+    Get the count of existing backup files for a database.
+    
+    Args:
+        backup_directory: Directory containing backup files
+        database: Database name
+        
+    Returns:
+        Number of backup files
+    """
+    try:
+        pattern = os.path.join(backup_directory, f"{database}-*.sql.tar.gz")
+        backup_files = glob.glob(pattern)
+        return len(backup_files)
+    except Exception as e:
+        logging.error(f"Failed to count backups: {str(e)}")
+        return 0
 

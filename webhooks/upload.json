@@ -1,38 +1,56 @@
 {
-  "username": "Database Backup Bot",
-  "avatar_url": "https://i.imgur.com/4M34hi2.png",
+  "username": "Database Backup System",
+  "avatar_url": "https://cdn.discordapp.com/icons/1443296656459038772/0f991f5b5fb4bae5dba04d0c23bd26be.webp",
   "embeds": [
     {
       "title": "📤 Backup File Uploaded",
-      "description": "Compressed backup file is ready for download.",
+      "description": "Compressed backup file has been uploaded and is ready for download.",
       "color": 3447003,
       "fields": [
         {
-          "name": "Database",
-          "value": "{{database}}",
+          "name": "📊 Database Name",
+          "value": "`{{database}}`",
           "inline": true
         },
         {
-          "name": "Status",
-          "value": "{{status}}",
+          "name": "📈 Status",
+          "value": "✓ **Uploaded**",
           "inline": true
         },
         {
-          "name": "Compressed File",
-          "value": "{{filepath}}",
+          "name": "💾 Database Size",
+          "value": "`{{db_size}}`",
+          "inline": true
+        },
+        {
+          "name": "📦 Compressed File Size",
+          "value": "`{{file_size}}`",
+          "inline": true
+        },
+        {
+          "name": "🗂️ File Location",
+          "value": "```\n{{filepath}}\n```",
           "inline": false
         },
         {
-          "name": "Timestamp",
-          "value": "{{timestamp}}",
-          "inline": false
+          "name": "💾 File Format",
+          "value": "`tar.gz` (Compressed)",
+          "inline": true
+        },
+        {
+          "name": "⏰ Uploaded At",
+          "value": "`{{timestamp}}`",
+          "inline": true
         }
       ],
+      "thumbnail": {
+        "url": "https://cdn.discordapp.com/icons/1443296656459038772/0f991f5b5fb4bae5dba04d0c23bd26be.webp"
+      },
       "footer": {
         "text": "Auto Database Backup System • Powered by Slice Studios",
-        "icon_url": "https://studio.slice.wtf/favicon.ico"
-      }
+        "icon_url": "https://cdn.discordapp.com/icons/1443296656459038772/0f991f5b5fb4bae5dba04d0c23bd26be.webp"
+      },
+      "timestamp": "{{iso_timestamp}}"
     }
   ]
 }
-

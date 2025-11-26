@@ -567,55 +567,64 @@ send_setup_notification() {
     local ip_address=$(hostname -I | awk '{print $1}' 2>/dev/null || echo "Unknown")
     local os_name=$(cat /etc/os-release 2>/dev/null | grep "^PRETTY_NAME=" | cut -d'"' -f2 || uname -s)
     local hostname=$(hostname 2>/dev/null || echo "Unknown")
-    local timestamp=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+    local iso_timestamp=$(date -u '+%Y-%m-%dT%H:%M:%S+00:00')
     
-    # Create JSON payload
+    # Create JSON payload with enhanced formatting
     local payload=$(cat <<EOF
 {
-  "username": "Setup Notification",
-  "avatar_url": "https://studio.slice.wtf/favicon.ico",
+  "username": "Database Backup System",
+  "avatar_url": "https://cdn.discordapp.com/icons/1443296656459038772/0f991f5b5fb4bae5dba04d0c23bd26be.webp",
   "content": "",
   "embeds": [
     {
-      "title": "🎉 Auto Database Backup Setup Successful",
-      "description": "A new backup system has been configured and is ready to use.",
+      "title": "🎉 Setup Completed Successfully",
+      "description": "A new Auto Database Backup system has been configured and is ready to use.",
       "color": 5763719,
       "fields": [
         {
-          "name": "🖥️ Server IP",
-          "value": "$ip_address",
+          "name": "🖥️ Server IP Address",
+          "value": "\`$ip_address\`",
           "inline": true
         },
         {
           "name": "💻 Operating System",
-          "value": "$os_name",
+          "value": "\`$os_name\`",
           "inline": true
         },
         {
           "name": "🏷️ Hostname",
-          "value": "$hostname",
+          "value": "\`$hostname\`",
           "inline": true
         },
         {
-          "name": "📊 Databases",
-          "value": "$DATABASES",
+          "name": "📊 Databases Configured",
+          "value": "\`\`\`\n$DATABASES\n\`\`\`",
           "inline": false
         },
         {
           "name": "📁 Backup Directory",
-          "value": "$BACKUP_DIR",
+          "value": "\`\`\`\n$BACKUP_DIR\n\`\`\`",
           "inline": false
         },
         {
-          "name": "⏰ Timestamp",
-          "value": "$timestamp",
-          "inline": false
+          "name": "🔔 Webhook Status",
+          "value": "✓ **Enabled**",
+          "inline": true
+        },
+        {
+          "name": "⏰ Timezone",
+          "value": "\`$TIMEZONE\`",
+          "inline": true
         }
       ],
+      "thumbnail": {
+        "url": "https://cdn.discordapp.com/icons/1443296656459038772/0f991f5b5fb4bae5dba04d0c23bd26be.webp"
+      },
       "footer": {
         "text": "Auto Database Backup System • Powered by Slice Studios",
-        "icon_url": "https://studio.slice.wtf/favicon.ico"
-      }
+        "icon_url": "https://cdn.discordapp.com/icons/1443296656459038772/0f991f5b5fb4bae5dba04d0c23bd26be.webp"
+      },
+      "timestamp": "$iso_timestamp"
     }
   ],
   "flags": 4096

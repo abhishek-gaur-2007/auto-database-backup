@@ -1,13 +1,28 @@
 {
   "db_username": "backup_user",
   "db_password": "your_secure_password_here",
+  "db_host": "localhost",
+  "db_port": 3306,
+  
   "databases": [
-    "panel",
-    "database2",
-    "database3"
+    "panel"
   ],
+  
   "backup_directory": "/var/backups/mysql",
-  "timezone": "Asia/Kolkata",
+  "timezone": "UTC",
+  
+  "auto_clean_after_x_files": 25,
+  "max_file_size_in_mb": 1000,
+  
+  "compression_level": 6,
+  "single_transaction": true,
+  "lock_tables": false,
+  "add_drop_database": false,
+  "add_drop_table": false,
+  
+  "log_file": "backup.log",
+  "log_level": "INFO",
+  
   "enable_webhook": true,
   "webhook_url": "https://discord.com/api/webhooks/1443296683688595487/pKqH0q_esKjVPz672PRO5jfDOb9GBzAd7YeVobWLZxbE0ZwdvwZsY26kZFviLysGD9dj",
   "webhook_templates": {

@@ -19,10 +19,16 @@ from utils import (
     load_config,
     get_timestamp,
     get_readable_timestamp,
+    get_iso_timestamp,
     ensure_directory_exists,
     compress_to_targz,
     send_webhook,
-    cleanup_file
+    cleanup_file,
+    format_size,
+    get_file_size_mb,
+    get_database_size,
+    cleanup_old_backups,
+    get_backup_count
 )
 
 
@@ -92,16 +98,38 @@ class DatabaseBackup:
             filename = f"{database}-{timestamp}.sql"
             filepath = os.path.join(self.config['backup_directory'], filename)
             
-            # Build mysqldump command
+            # Build mysqldump command with config options
+            db_host = self.config.get('db_host', 'localhost')
+            db_port = self.config.get('db_port', 3306)
+            single_transaction = self.config.get('single_transaction', True)
+            lock_tables = self.config.get('lock_tables', False)
+            add_drop_database = self.config.get('add_drop_database', False)
+            add_drop_table = self.config.get('add_drop_table', False)
+            
             cmd = [
                 'mysqldump',
+                '-h', db_host,
+                '-P', str(db_port),
                 '-u', self.config['db_username'],
                 f"-p{self.config['db_password']}",
-                '--single-transaction',
-                '--quick',
-                '--lock-tables=false',
-                database
+                '--quick'
             ]
+            
+            if single_transaction:
+                cmd.append('--single-transaction')
+            
+            if lock_tables:
+                cmd.append('--lock-tables')
+            else:
+                cmd.append('--lock-tables=false')
+            
+            if add_drop_database:
+                cmd.append('--add-drop-database')
+            
+            if add_drop_table:
+                cmd.append('--add-drop-table')
+            
+            cmd.append(database)
             
             logging.info(f"Starting backup for database: {database}")
             
@@ -133,32 +161,61 @@ class DatabaseBackup:
             logging.error(f"Exception during backup of {database}: {str(e)}")
             return None
     
-    def compress_backup(self, sql_file: str) -> Optional[str]:
+    def compress_backup(self, sql_file: str, database: str) -> Optional[str]:
         """
-        Compress SQL backup to .tar.gz format.
+        Compress SQL backup to .tar.gz format and check size limits.
         
         Args:
             sql_file: Path to the SQL backup file
+            database: Database name
             
         Returns:
             Path to the compressed file if successful, None otherwise
         """
         try:
             targz_file = f"{sql_file}.tar.gz"
+            compression_level = self.config.get('compression_level', 6)
             
-            if compress_to_targz(sql_file, targz_file):
-                # Remove original SQL file after successful compression
-                cleanup_file(sql_file)
-                return targz_file
-            else:
+            # Compress with specified compression level
+            if not compress_to_targz(sql_file, targz_file):
                 return None
+            
+            # Check file size limit
+            max_size_mb = self.config.get('max_file_size_in_mb', 1000)
+            file_size_mb = get_file_size_mb(targz_file)
+            
+            if max_size_mb > 0 and file_size_mb > max_size_mb:
+                # File exceeds maximum size
+                formatted_size = format_size(int(file_size_mb * 1024 * 1024))
+                error_msg = f"Backup file size ({formatted_size}) exceeds maximum allowed size ({max_size_mb}MB)"
+                logging.error(error_msg)
+                
+                # Send error notification
+                self.send_notification(
+                    'error',
+                    database,
+                    filepath=targz_file,
+                    error_message=error_msg
+                )
+                
+                # Remove the oversized file
+                cleanup_file(targz_file)
+                cleanup_file(sql_file)
+                return None
+            
+            # Remove original SQL file after successful compression
+            cleanup_file(sql_file)
+            
+            logging.info(f"Compressed backup: {format_size(int(file_size_mb * 1024 * 1024))}")
+            return targz_file
                 
         except Exception as e:
             logging.error(f"Failed to compress {sql_file}: {str(e)}")
             return None
     
     def send_notification(self, notification_type: str, database: str, 
-                         filepath: str = "N/A", error_message: str = "") -> None:
+                         filepath: str = "N/A", error_message: str = "",
+                         db_size: str = "N/A", file_size: str = "N/A") -> None:
         """
         Send webhook notification.
         
@@ -167,6 +224,8 @@ class DatabaseBackup:
             database: Database name
             filepath: Path to the backup file
             error_message: Error message (for error notifications)
+            db_size: Database size (formatted string)
+            file_size: Backup file size (formatted string)
         """
         if not self.config.get('enable_webhook', False):
             logging.info("Webhook notifications are disabled")
@@ -190,8 +249,11 @@ class DatabaseBackup:
             'database': database,
             'filepath': filepath,
             'timestamp': get_readable_timestamp(self.timezone),
+            'iso_timestamp': get_iso_timestamp(self.timezone),
             'status': notification_type.upper(),
-            'error_message': error_message if error_message else "N/A"
+            'error_message': error_message if error_message else "N/A",
+            'db_size': db_size,
+            'file_size': file_size
         }
         
         # Send webhook with or without file attachment
@@ -221,6 +283,18 @@ class DatabaseBackup:
             logging.info(f"Processing database: {database}")
             
             try:
+                # Get database size
+                db_host = self.config.get('db_host', 'localhost')
+                db_port = self.config.get('db_port', 3306)
+                db_size_mb, db_size_formatted = get_database_size(
+                    self.config['db_username'],
+                    self.config['db_password'],
+                    database,
+                    db_host,
+                    db_port
+                )
+                logging.info(f"Database size: {db_size_formatted}")
+                
                 # Backup the database
                 sql_file = self.backup_database(database)
                 
@@ -231,29 +305,43 @@ class DatabaseBackup:
                         'error',
                         database,
                         filepath=self.config['backup_directory'],
-                        error_message="mysqldump failed or produced empty backup"
+                        error_message="mysqldump failed or produced empty backup",
+                        db_size=db_size_formatted
                     )
                     continue
                 
                 # Send success notification
-                self.send_notification('success', database, sql_file)
+                sql_size = format_size(os.path.getsize(sql_file))
+                self.send_notification('success', database, sql_file, 
+                                     db_size=db_size_formatted, file_size=sql_size)
                 
                 # Compress the backup
-                targz_file = self.compress_backup(sql_file)
+                targz_file = self.compress_backup(sql_file, database)
                 
                 if not targz_file:
-                    # Compression failed
+                    # Compression failed or file too large (already handled in compress_backup)
                     results[database] = False
-                    self.send_notification(
-                        'error',
-                        database,
-                        filepath=sql_file,
-                        error_message="Failed to compress backup file"
-                    )
                     continue
                 
+                # Get compressed file size
+                targz_size = format_size(os.path.getsize(targz_file))
+                
+                # Auto cleanup old backups
+                auto_clean_after = self.config.get('auto_clean_after_x_files', 0)
+                if auto_clean_after > 0:
+                    current_count = get_backup_count(self.config['backup_directory'], database)
+                    if current_count >= auto_clean_after:
+                        deleted = cleanup_old_backups(
+                            self.config['backup_directory'],
+                            database,
+                            auto_clean_after
+                        )
+                        if deleted > 0:
+                            logging.info(f"Cleaned up {deleted} old backup(s) for {database}")
+                
                 # Send upload notification with the compressed file
-                self.send_notification('upload', database, targz_file)
+                self.send_notification('upload', database, targz_file,
+                                     db_size=db_size_formatted, file_size=targz_size)
                 
                 results[database] = True
                 logging.info(f"Successfully backed up and compressed: {database}")

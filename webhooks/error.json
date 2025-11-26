@@ -1,43 +1,51 @@
 {
-  "username": "Database Backup Bot",
-  "avatar_url": "https://i.imgur.com/4M34hi2.png",
+  "username": "Database Backup System",
+  "avatar_url": "https://cdn.discordapp.com/icons/1443296656459038772/0f991f5b5fb4bae5dba04d0c23bd26be.webp",
   "embeds": [
     {
       "title": "❌ Backup Failed",
-      "description": "An error occurred during the backup process.",
+      "description": "An error occurred during the database backup process.",
       "color": 15158332,
       "fields": [
         {
-          "name": "Database",
-          "value": "{{database}}",
+          "name": "📊 Database Name",
+          "value": "`{{database}}`",
           "inline": true
         },
         {
-          "name": "Status",
-          "value": "{{status}}",
+          "name": "📈 Status",
+          "value": "✗ **Failed**",
           "inline": true
         },
         {
-          "name": "Error Message",
-          "value": "```{{error_message}}```",
+          "name": "💾 Database Size",
+          "value": "`{{db_size}}`",
+          "inline": true
+        },
+        {
+          "name": "⚠️ Error Details",
+          "value": "```\n{{error_message}}\n```",
           "inline": false
         },
         {
-          "name": "Filepath",
-          "value": "{{filepath}}",
+          "name": "📁 Target Path",
+          "value": "```\n{{filepath}}\n```",
           "inline": false
         },
         {
-          "name": "Timestamp",
-          "value": "{{timestamp}}",
+          "name": "⏰ Failed At",
+          "value": "`{{timestamp}}`",
           "inline": false
         }
       ],
+      "thumbnail": {
+        "url": "https://cdn.discordapp.com/icons/1443296656459038772/0f991f5b5fb4bae5dba04d0c23bd26be.webp"
+      },
       "footer": {
         "text": "Auto Database Backup System • Powered by Slice Studios",
-        "icon_url": "https://studio.slice.wtf/favicon.ico"
-      }
+        "icon_url": "https://cdn.discordapp.com/icons/1443296656459038772/0f991f5b5fb4bae5dba04d0c23bd26be.webp"
+      },
+      "timestamp": "{{iso_timestamp}}"
     }
   ]
 }
-

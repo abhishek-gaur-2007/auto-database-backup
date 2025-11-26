@@ -1,13 +1,32 @@
 {
+  "_comment": "Auto Database Backup System Configuration - Slice Studios",
+  
   "db_username": "your_database_username",
   "db_password": "your_database_password",
+  "db_host": "localhost",
+  "db_port": 3306,
+  
   "databases": [
     "database1",
     "database2",
     "database3"
   ],
+  
   "backup_directory": "/path/to/backups",
   "timezone": "UTC",
+  
+  "auto_clean_after_x_files": 25,
+  "max_file_size_in_mb": 1000,
+  
+  "compression_level": 6,
+  "single_transaction": true,
+  "lock_tables": false,
+  "add_drop_database": false,
+  "add_drop_table": false,
+  
+  "log_file": "backup.log",
+  "log_level": "INFO",
+  
   "enable_webhook": true,
   "webhook_url": "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN",
   "webhook_templates": {
@@ -16,4 +35,3 @@
     "upload": "webhooks/upload.json"
   }
 }
-

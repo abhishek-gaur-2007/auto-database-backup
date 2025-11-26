@@ -34,7 +34,8 @@
         }
       ],
       "footer": {
-        "text": "Auto Database Backup System"
+        "text": "Auto Database Backup System • Powered by Slice Studios",
+        "icon_url": "https://studio.slice.wtf/favicon.ico"
       }
     }
   ]

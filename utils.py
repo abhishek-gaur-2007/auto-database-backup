@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
 Utility functions for the database backup system.
+
+Copyright (c) 2025 Slice Studios (https://studio.slice.wtf)
+Licensed under MIT License
 """
 
 import os
@@ -11,6 +14,9 @@ import requests
 from datetime import datetime
 from typing import Dict, Any, Optional
 import pytz
+
+# Discord webhook file size limit (10MB)
+MAX_WEBHOOK_FILE_SIZE = 10 * 1024 * 1024  # 10MB in bytes
 
 
 def setup_logging(log_file: str = "backup.log") -> None:
@@ -204,6 +210,7 @@ def send_webhook(webhook_url: str, template_path: str, replacements: Dict[str, s
                  file_path: Optional[str] = None) -> bool:
     """
     Send a webhook notification with optional file attachment.
+    Discord has a 10MB file size limit for webhooks.
     
     Args:
         webhook_url: Discord webhook URL
@@ -222,13 +229,44 @@ def send_webhook(webhook_url: str, template_path: str, replacements: Dict[str, s
         payload = replace_placeholders(template, replacements)
         
         if file_path and os.path.exists(file_path):
-            # Send with file attachment
-            with open(file_path, 'rb') as f:
-                files = {
-                    'file': (os.path.basename(file_path), f),
-                    'payload_json': (None, json.dumps(payload))
-                }
-                response = requests.post(webhook_url, files=files)
+            # Check file size before attempting upload
+            file_size = os.path.getsize(file_path)
+            file_size_mb = file_size / (1024 * 1024)
+            
+            if file_size > MAX_WEBHOOK_FILE_SIZE:
+                # File is too large for Discord webhook
+                logging.warning(f"File size ({file_size_mb:.2f}MB) exceeds Discord webhook limit (10MB): {file_path}")
+                logging.info("Sending notification without file attachment")
+                
+                # Send notification without file, but include file size info
+                size_warning = f" (File size: {file_size_mb:.2f}MB - Too large to upload via webhook, max 10MB)"
+                payload = replace_placeholders(template, {
+                    **replacements,
+                    'filepath': replacements.get('filepath', 'N/A') + size_warning
+                })
+                
+                response = requests.post(
+                    webhook_url,
+                    json=payload,
+                    headers={'Content-Type': 'application/json'}
+                )
+                
+                if response.status_code in [200, 204]:
+                    logging.info("Webhook sent successfully (without file attachment due to size)")
+                    logging.error(f"Cannot upload file to webhook: File size ({file_size_mb:.2f}MB) exceeds 10MB limit")
+                    return True
+                else:
+                    logging.error(f"Webhook failed with status {response.status_code}: {response.text}")
+                    return False
+            else:
+                # File size is acceptable, send with attachment
+                logging.info(f"Uploading file via webhook ({file_size_mb:.2f}MB)")
+                with open(file_path, 'rb') as f:
+                    files = {
+                        'file': (os.path.basename(file_path), f),
+                        'payload_json': (None, json.dumps(payload))
+                    }
+                    response = requests.post(webhook_url, files=files)
         else:
             # Send without file attachment
             response = requests.post(

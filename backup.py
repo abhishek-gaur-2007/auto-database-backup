@@ -2,6 +2,9 @@
 """
 Automated MySQL/MariaDB Database Backup Script
 Supports multiple databases, compression, and webhook notifications.
+
+Copyright (c) 2025 Slice Studios (https://studio.slice.wtf)
+Licensed under MIT License
 """
 
 import os

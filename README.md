@@ -2,6 +2,10 @@
 
 A robust, automated Python-based backup solution for MySQL/MariaDB databases with compression, webhook notifications, and intelligent error handling.
 
+**Developed by [Slice Studios](https://studio.slice.wtf)**
+
+---
+
 ## 🚀 Features
 
 - **Multi-Database Support**: Backup multiple databases in a single run
@@ -285,6 +289,22 @@ The timestamp is based on the timezone configured in `config.json`.
 3. Click "New Webhook"
 4. Copy the Webhook URL
 5. Paste it into `webhook_url` in `config.json`
+
+### 📏 File Size Limit
+
+**Important:** Discord webhooks have a **10MB maximum file size limit** for attachments.
+
+**How it works:**
+- ✅ Files **under 10MB**: Uploaded automatically with the webhook notification
+- ⚠️ Files **over 10MB**: Notification sent WITHOUT file attachment
+  - The webhook message will include the file size and a warning
+  - An error is logged: "Cannot upload file to webhook: File size exceeds 10MB limit"
+  - The backup file is still saved locally in your backup directory
+
+**Recommendation:** For large databases:
+- Consider more frequent incremental backups
+- Use file rotation/cleanup to manage old backups
+- Access backup files directly from the server instead of webhook uploads
 
 ### Webhook Templates
 
@@ -613,11 +633,21 @@ Feel free to submit issues, fork the repository, and create pull requests for an
 
 ## 📄 License
 
-This project is open-source and available for personal and commercial use.
+This project is open-source and available for personal and commercial use under the MIT License.
 
 ## 📧 Support
 
 For issues, questions, or suggestions, please open an issue on the repository.
+
+---
+
+## 🏢 Credits
+
+**Developed by [Slice Studios](https://studio.slice.wtf)**
+
+This Auto Database Backup System is proudly created and maintained by Slice Studios.
+
+Visit us: **[studio.slice.wtf](https://studio.slice.wtf)**
 
 ---
 

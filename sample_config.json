@@ -1,0 +1,19 @@
+{
+  "db_username": "your_database_username",
+  "db_password": "your_database_password",
+  "databases": [
+    "database1",
+    "database2",
+    "database3"
+  ],
+  "backup_directory": "/path/to/backups",
+  "timezone": "UTC",
+  "enable_webhook": true,
+  "webhook_url": "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN",
+  "webhook_templates": {
+    "success": "webhooks/success.json",
+    "error": "webhooks/error.json",
+    "upload": "webhooks/upload.json"
+  }
+}
+

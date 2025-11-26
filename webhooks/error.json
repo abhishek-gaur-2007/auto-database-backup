@@ -1,0 +1,42 @@
+{
+  "username": "Database Backup Bot",
+  "avatar_url": "https://i.imgur.com/4M34hi2.png",
+  "embeds": [
+    {
+      "title": "❌ Backup Failed",
+      "description": "An error occurred during the backup process.",
+      "color": 15158332,
+      "fields": [
+        {
+          "name": "Database",
+          "value": "{{database}}",
+          "inline": true
+        },
+        {
+          "name": "Status",
+          "value": "{{status}}",
+          "inline": true
+        },
+        {
+          "name": "Error Message",
+          "value": "```{{error_message}}```",
+          "inline": false
+        },
+        {
+          "name": "Filepath",
+          "value": "{{filepath}}",
+          "inline": false
+        },
+        {
+          "name": "Timestamp",
+          "value": "{{timestamp}}",
+          "inline": false
+        }
+      ],
+      "footer": {
+        "text": "Auto Database Backup System"
+      }
+    }
+  ]
+}
+

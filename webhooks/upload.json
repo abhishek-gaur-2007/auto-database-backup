@@ -1,0 +1,37 @@
+{
+  "username": "Database Backup Bot",
+  "avatar_url": "https://i.imgur.com/4M34hi2.png",
+  "embeds": [
+    {
+      "title": "📤 Backup File Uploaded",
+      "description": "Compressed backup file is ready for download.",
+      "color": 3447003,
+      "fields": [
+        {
+          "name": "Database",
+          "value": "{{database}}",
+          "inline": true
+        },
+        {
+          "name": "Status",
+          "value": "{{status}}",
+          "inline": true
+        },
+        {
+          "name": "Compressed File",
+          "value": "{{filepath}}",
+          "inline": false
+        },
+        {
+          "name": "Timestamp",
+          "value": "{{timestamp}}",
+          "inline": false
+        }
+      ],
+      "footer": {
+        "text": "Auto Database Backup System"
+      }
+    }
+  ]
+}
+

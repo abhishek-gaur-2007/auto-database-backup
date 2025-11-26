@@ -1,0 +1,37 @@
+{
+  "username": "Database Backup Bot",
+  "avatar_url": "https://i.imgur.com/4M34hi2.png",
+  "embeds": [
+    {
+      "title": "✅ Backup Successful",
+      "description": "Database backup completed successfully.",
+      "color": 3066993,
+      "fields": [
+        {
+          "name": "Database",
+          "value": "{{database}}",
+          "inline": true
+        },
+        {
+          "name": "Status",
+          "value": "{{status}}",
+          "inline": true
+        },
+        {
+          "name": "Backup File",
+          "value": "{{filepath}}",
+          "inline": false
+        },
+        {
+          "name": "Timestamp",
+          "value": "{{timestamp}}",
+          "inline": false
+        }
+      ],
+      "footer": {
+        "text": "Auto Database Backup System"
+      }
+    }
+  ]
+}
+

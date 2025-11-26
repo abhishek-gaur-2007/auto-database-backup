@@ -1,0 +1,18 @@
+{
+  "db_username": "backup_user",
+  "db_password": "your_secure_password_here",
+  "databases": [
+    "panel",
+    "database2",
+    "database3"
+  ],
+  "backup_directory": "/var/backups/mysql",
+  "timezone": "Asia/Kolkata",
+  "enable_webhook": true,
+  "webhook_url": "https://discord.com/api/webhooks/1443296683688595487/pKqH0q_esKjVPz672PRO5jfDOb9GBzAd7YeVobWLZxbE0ZwdvwZsY26kZFviLysGD9dj",
+  "webhook_templates": {
+    "success": "webhooks/success.json",
+    "error": "webhooks/error.json",
+    "upload": "webhooks/upload.json"
+  }
+}

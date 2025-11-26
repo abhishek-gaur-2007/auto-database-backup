@@ -23,7 +23,7 @@ A robust, automated Python-based backup solution for MySQL/MariaDB databases wit
 
 ## 📸 Webhook Notifications Preview
 
-![Webhook Example](https://raw.githubusercontent.com/user-attachments/assets/webhook-preview.png)
+![Webhook Example](https://cdn.discordapp.com/attachments/1431197138301354017/1443317084883779674/image.png?ex=6928a148&is=69274fc8&hm=297e259ed4c545e9d0c40432a2dafe90e5987cd9a17b8817ab2b3254ec109518&)
 
 Beautiful Discord notifications showing:
 - ✅ Backup completion status

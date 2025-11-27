@@ -267,4 +267,4 @@ Open-source under MIT License. Free for personal and commercial use.
 
 ---
 
-**Made with ❤️ for reliable database backups**
+**Made with ❤️ by Abhishek Gaur**
